@@ -1,0 +1,9 @@
+{
+  "name": "trade-engine-api",
+  "version": "1.0.0",
+  "description": "Yahoo Finance proxy for trade engine",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'no build needed'"
+  }
+}
