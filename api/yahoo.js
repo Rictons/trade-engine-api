@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // Add these 4 lines:
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -7,8 +6,36 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
-
-  // Rest of your code continues below...
+  
+  const { ticker } = req.query;
+  
+  if (!ticker) {
+    return res.status(400).json({ error: 'ticker required' });
+  }
+  
+  const clean = ticker.trim().toUpperCase();
+  console.log(`[START] ${clean}: Attempting Yahoo Finance...`);
+  try {
+    const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(clean)}?range=10y&interval=1d&includePrePost=false`;
+    const response = await fetch(yahooUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+      timeout: 10000
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.chart?.result?.[0]?.timestamp?.length > 0) {
+        console.log(`[SUCCESS] ${clean}: Yahoo Finance`);
+        return res.status(200).json(data);
+      }
+    }
+  } catch (error) {
+    console.log(`[FAIL] ${clean}: Yahoo - ${error.message}`);
+  }
+  
+  console.log(`[FAILED] ${clean}: All sources exhausted`);
+  return res.status(500).json({ error: 'All data sources failed', ticker: clean });
+}
 // api/yahoo.js - Round-robin multiple data sources
 // Try Yahoo first, then others for tickers that fail
 
